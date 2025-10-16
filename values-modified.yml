@@ -376,9 +376,6 @@ collectors:
             - type: json_parser
               parse_from: body
               parse_to: attributes
-            - type: json_parser
-              parse_from: attributes.log
-              parse_to: attributes
           # While parsing, immediately handle the timestamp and severity.
               timestamp:
                 parse_from: attributes["@timestamp"]
