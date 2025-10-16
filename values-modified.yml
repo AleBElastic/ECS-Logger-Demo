@@ -384,9 +384,6 @@ collectors:
                 parse_from: attributes["log.level"]
               message:
                 parse_from: attributes["log"]
-            - type: move
-              from: attributes.message
-              to: body
             - id: container-parser # Extract container's metadata
               type: container
         # [Hostmetrics Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/hostmetricsreceiver)
