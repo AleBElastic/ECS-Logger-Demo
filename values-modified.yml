@@ -535,8 +535,8 @@ collectors:
               - resource/k8s
               - resource/hostname
               - resource/cloud
+              - transform
             exporters:
-              - debug
               - otlp/gateway
           metrics/node/otel:
             receivers:
