@@ -222,9 +222,13 @@ collectors:
       processors:
         # [Batch Processor](https://github.com/open-telemetry/opentelemetry-collector/tree/main/processor/batchprocessor)
         # 1. YOUR TRANSFORMATION LOGIC
+        # The processor name is indented once under 'processors:'
         transform/logs_cleanup:
+          # 'log_statements' is indented once under the processor name
           log_statements:
-            - set(body, attributes["message"])
+            # OTTL statements are indented once under 'log_statements'
+            - set(body, attributes["message"]) 
+      # ... all other clean-up statements must be here ...
         batch: {}
         batch/metrics:
           # explicitly set send_batch_max_size to 0, as splitting metrics requests may cause version_conflict_engine_exception in TSDB
