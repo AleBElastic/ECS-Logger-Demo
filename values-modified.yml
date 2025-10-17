@@ -500,28 +500,6 @@ collectors:
               enabled: true
           extra_metadata_labels:
             - container.id
-      # 2. Define the 'transform' processor using OTTL
-      processors:
-        transform:
-          log_statements:
-            # --- Data Mapping (Renaming/Moving) ---
-            
-            # 1. Move the log message (attributes.message) to the top-level 'body' field.
-            - set(body, attributes["message"])
-            
-            # 2. Rename the application logger to the OTEL standard semantic convention.
-            - set(attributes["otel.log.logger.name"], attributes["log.logger"])
-
-            # --- Data Cleanup (Removing) ---
-            
-            # 3. Delete redundant or unnecessary fields from the original log structure.
-            - delete(attributes["log"])          # Raw JSON string from regex_parser
-            - delete(attributes["@timestamp"])   # Inner timestamp (now set as top-level Timestamp)
-            - delete(attributes["log.level"])    # Inner log.level (now set as SeverityText/Number)
-            - delete(attributes["message"])      # Original message (now set as top-level Body)
-            - delete(attributes["log.logger"])   # Original log.logger (now renamed)
-            - delete(attributes["ecs.version"])  # ECS-specific field
-            - delete(attributes["event.dataset"])# ECS-specific field
       # [Service Section](https://opentelemetry.io/docs/collector/configuration/#service)
       service:
         pipelines:
@@ -533,7 +511,6 @@ collectors:
             receivers:
               - filelog
             processors:
-              - transform
               - batch
               - k8sattributes
               - resourcedetection/system
