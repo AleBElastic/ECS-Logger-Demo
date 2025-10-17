@@ -228,7 +228,6 @@ collectors:
           log_statements:
             # OTTL statements are indented once under 'log_statements'
             - delete(attributes["log"])
-      # ... all other clean-up statements must be here ...
         batch: {}
         batch/metrics:
           # explicitly set send_batch_max_size to 0, as splitting metrics requests may cause version_conflict_engine_exception in TSDB
