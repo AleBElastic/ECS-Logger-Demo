@@ -220,9 +220,6 @@ collectors:
           tls:
             insecure: true
       processors:
-        transform/logs_cleanup:
-          log_statements:
-            - delete(attributes["log"])
         batch: {}
         batch/metrics:
           # explicitly set send_batch_max_size to 0, as splitting metrics requests may cause version_conflict_engine_exception in TSDB
@@ -522,7 +519,6 @@ collectors:
               - resource/k8s
               - resource/hostname
               - resource/cloud
-              - transform/logs_cleanup
             exporters:
               - otlp/gateway
           metrics/node/otel:
