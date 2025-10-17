@@ -373,19 +373,24 @@ collectors:
           include_file_path: true
           operators:
             # Step 1: Parse the outer JSON created by the Kubernetes json-file log driver.
-            - type: json_parser
-              parse_from: body
-              parse_to: attributes
-          # While parsing, immediately handle the timestamp and severity.
-              timestamp:
+           - type: json_parser
+             parse_from: body     # 'body' contains the raw JSON string like {"log": "...", "stream": "...", "time": "..."}
+             parse_to: attributes # Extract 'log', 'stream', and 'time' into log attributes.
+            # Step 2: Now that the outer JSON is parsed, the application's log message is in 'attributes["log"]'.
+            # This second parser extracts the fields from the INNER JSON.
+           - type: json_parser
+             parse_from: attributes["log"] # Read the inner JSON string from the 'log' attribute
+             parse_to: attributes          # Merge the inner JSON fields into the existing attributes
+                  # While parsing, immediately handle the timestamp and severity.
+             timestamp:
                 parse_from: attributes["@timestamp"]
                 layout: '%Y-%m-%dT%H:%M:%S.%fZ'
-              severity:
+             severity:
                 parse_from: attributes["log.level"]
-              message:
+             message:
                 parse_from: attributes["log"]
-            - id: container-parser # Extract container's metadata
-              type: container
+           - id: container-parser # Extract container's metadata
+             type: container
         # [Hostmetrics Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/hostmetricsreceiver)
         hostmetrics:
           collection_interval: 60s
