@@ -372,25 +372,29 @@ collectors:
           include_file_name: false
           include_file_path: true
           operators:
-            # Step 1: Parse the outer JSON created by the Kubernetes json-file log driver.
-           - type: json_parser
-             parse_from: body     # 'body' contains the raw JSON string like {"log": "...", "stream": "...", "time": "..."}
-             parse_to: attributes # Extract 'log', 'stream', and 'time' into log attributes.
-            # Step 2: Now that the outer JSON is parsed, the application's log message is in 'attributes["log"]'.
-            # This second parser extracts the fields from the INNER JSON.
-           - type: json_parser
-             parse_from: attributes["log"] # Read the inner JSON string from the 'log' attribute
-             parse_to: attributes          # Merge the inner JSON fields into the existing attributes
-                  # While parsing, immediately handle the timestamp and severity.
-             timestamp:
-                parse_from: attributes["@timestamp"]
-                layout: '%Y-%m-%dT%H:%M:%S.%fZ'
-             severity:
-                parse_from: attributes["log.level"]
-             message:
-                parse_from: attributes["log"]
-           - id: container-parser # Extract container's metadata
-             type: container
+            # 1. Parse the outer wrapper (CRI-O/Containerd format)
+          - type: regex_parser
+            # Matches: Timestamp, Stream (stdout/stderr), Flag (F/P), and the remaining JSON body.
+            regex: '^(?P<time>[^ ]+) (?P<stream>stdout|stderr) (?P<flag>F|P) (?P<log>.*)$'
+            
+          # 2. Parse the inner JSON (the actual application log)
+          - type: json_parser
+            parse_from: attributes.log # Read the JSON string captured in step 1's 'log' field
+            parse_to: attributes        # Merge the inner fields (e.g., @timestamp, log.level) into attributes
+
+          # 3. Promote/set OpenTelemetry fields from the parsed attributes
+          - type: timestamp
+            parse_from: attributes["@timestamp"] # Use the @timestamp field from the inner JSON
+            layout: '%Y-%m-%dT%H:%M:%S.%fZ'
+            
+          - type: severity
+            parse_from: attributes["log.level"] # Use the log.level field from the inner JSON
+
+          - type: move
+            from: attributes.message # Promote the inner JSON's 'message' field
+            to: body
+          - id: container-parser # Extract container's metadata
+            type: container
         # [Hostmetrics Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/hostmetricsreceiver)
         hostmetrics:
           collection_interval: 60s
