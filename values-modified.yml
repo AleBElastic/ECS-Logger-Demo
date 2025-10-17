@@ -516,14 +516,6 @@ collectors:
             - delete(attributes["log.logger"])
             - delete(attributes["ecs.version"])
             - delete(attributes["event.dataset"])
-        batch:
-          # default batch for logs/traces
-          send_batch_size: 8192
-          timeout: 10s
-        batch/metrics:
-          # specific batch for metrics (required by your pipeline)
-          send_batch_size: 1024
-          timeout: 5s
       service:
         pipelines:
           # Disable default non used kube-stack Helm Chart pipelines
@@ -561,7 +553,6 @@ collectors:
               - resource/hostname
               - resource/cloud
             exporters:
-              # - debug
               - otlp/gateway
           metrics/otel-apm:
             receivers:
