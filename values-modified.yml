@@ -227,7 +227,7 @@ collectors:
           # 'log_statements' is indented once under the processor name
           log_statements:
             # OTTL statements are indented once under 'log_statements'
-            - set(body, attributes["message"]) 
+            - delete(attributes["log"])
       # ... all other clean-up statements must be here ...
         batch: {}
         batch/metrics:
