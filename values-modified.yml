@@ -512,6 +512,7 @@ collectors:
               - resource/hostname
               - resource/cloud
             exporters:
+              - debug
               - otlp/gateway
           metrics/node/otel:
             receivers:
