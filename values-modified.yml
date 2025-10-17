@@ -503,9 +503,9 @@ collectors:
       # [Service Section](https://opentelemetry.io/docs/collector/configuration/#service)
       processors:
       # 1. YOUR TRANSFORMATION LOGIC
-      transform:
-        log_statements:
-          - set(body, attributes["message"])
+        transform:
+          log_statements:
+            - set(body, attributes["message"])
       service:
         pipelines:
           # Disable default non used kube-stack Helm Chart pipelines
