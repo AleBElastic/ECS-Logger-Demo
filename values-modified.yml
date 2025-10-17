@@ -220,9 +220,6 @@ collectors:
           tls:
             insecure: true
       processors:
-        # [Batch Processor](https://github.com/open-telemetry/opentelemetry-collector/tree/main/processor/batchprocessor)
-        # 1. YOUR TRANSFORMATION LOGIC
-        # The processor name is indented once under 'processors:'
         transform/logs_cleanup:
           log_statements:
             - delete(attributes["log"])
