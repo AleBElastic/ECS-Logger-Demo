@@ -224,9 +224,7 @@ collectors:
         # 1. YOUR TRANSFORMATION LOGIC
         # The processor name is indented once under 'processors:'
         transform/logs_cleanup:
-          # 'log_statements' is indented once under the processor name
           log_statements:
-            # OTTL statements are indented once under 'log_statements'
             - delete(attributes["log"])
         batch: {}
         batch/metrics:
