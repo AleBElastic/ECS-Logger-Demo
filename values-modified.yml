@@ -369,9 +369,65 @@ collectors:
             - /var/log/pods/*opentelemetry-kube-stack*/*/*.log
           include:
             - /var/log/pods/*/*/*.log
-          include_file_name: true
+          include_file_name: false
           include_file_path: true
           operators:
+            # 1. Parse the outer wrapper (CRI-O/Containerd format)
+            - type: regex_parser
+              id: parse-container-wrapper
+              # Matches: Timestamp, Stream (stdout/stderr), Flag (F/P), and the remaining JSON body.
+              regex: '^(?P<time>[^ ]+) (?P<stream>stdout|stderr) (?P<flag>F|P) (?P<log>.*)$'
+              parse_to: attributes
+              
+            # 2. Parse the inner JSON and promote fields
+            - type: json_parser
+              id: parse-application-json
+              parse_from: attributes.log        # Read the JSON string captured in step 1's 'log' field
+              parse_to: attributes              # Merge the inner fields into attributes
+              
+              # Correctly extract Timestamp and Severity from the INNER JSON
+              timestamp:
+                parse_from: attributes["@timestamp"] # Use the @timestamp from the inner JSON
+                layout: '%Y-%m-%dT%H:%M:%S.%fZ'
+                
+              severity:
+                parse_from: attributes["log.level"] # Use the log.level from the inner JSON
+
+            # 3. Rename and Map Application Fields to OTEL Conventions
+            - type: rename
+              id: rename-to-otel-conventions
+              actions:
+                # OTEL Body: Move the actual log message to the log record Body
+                - from: attributes.message
+                  to: body
+                  
+                # OTEL Attributes: Map specific application fields to preferred OTEL conventions
+                - from: attributes["log.logger"]
+                  to: attributes["otel.log.logger.name"]
+                  
+                # Cleanup: Remove the nested JSON string captured in step 1
+                - from: attributes.log
+                  to: attributes.remove.log
+                  
+                # Cleanup: Remove the inner JSON's timestamp, which is now at the top level
+                - from: attributes["@timestamp"]
+                  to: attributes.remove.timestamp
+                  
+                # Cleanup: Remove the inner JSON's log.level, which is now mapped to Severity
+                - from: attributes["log.level"]
+                  to: attributes.remove.log.level
+                  
+                # Cleanup: Remove ECS-specific metadata that isn't needed in pure OTEL
+                - from: attributes["ecs.version"]
+                  to: attributes.remove.ecs.version
+                - from: attributes["event.dataset"]
+                  to: attributes.remove.event.dataset
+                  
+            # 4. Remove temporary/unnecessary attributes
+            - type: remove
+              id: remove-temp-fields
+              field: attributes.remove.*
+              # This removes all the fields renamed to 'attributes.remove.*' in the previous step
             - id: container-parser # Extract container's metadata
               type: container
         # [Hostmetrics Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/hostmetricsreceiver)
