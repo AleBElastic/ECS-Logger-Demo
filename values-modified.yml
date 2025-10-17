@@ -222,7 +222,7 @@ collectors:
       processors:
         # [Batch Processor](https://github.com/open-telemetry/opentelemetry-collector/tree/main/processor/batchprocessor)
         # 1. YOUR TRANSFORMATION LOGIC
-        transform:
+        transform/logs_cleanup:
           log_statements:
             - set(body, attributes["message"])
         batch: {}
@@ -524,7 +524,7 @@ collectors:
               - resource/k8s
               - resource/hostname
               - resource/cloud
-              - transform/log_statements
+              - transform/logs_cleanup
             exporters:
               - otlp/gateway
           metrics/node/otel:
